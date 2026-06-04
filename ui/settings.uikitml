@@ -1,0 +1,113 @@
+<style>
+  .settings-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(10, 0, 0, 0.92);
+    border-color: #ff4400;
+    border-width: 0.1;
+    border-radius: 1.5;
+  }
+  .panel-title {
+    font-size: 2.5;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .setting-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0.8;
+    padding-top: 0.4;
+    padding-bottom: 0.4;
+  }
+  .setting-label {
+    font-size: 1.2;
+    color: #885533;
+  }
+  .setting-btn {
+    margin-left: 1;
+    padding-top: 0.3;
+    padding-bottom: 0.3;
+    padding-left: 1;
+    padding-right: 1;
+    background-color: rgba(80, 30, 0, 0.5);
+    border-color: #ff6600;
+    border-width: 0.04;
+    border-radius: 0.3;
+    cursor: pointer;
+  }
+  .setting-value {
+    font-size: 1.2;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .back-btn {
+    margin-top: 1.5;
+    padding-top: 0.4;
+    padding-bottom: 0.4;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(40, 20, 0, 0.4);
+    border-color: #664400;
+    border-width: 0.04;
+    border-radius: 0.4;
+    cursor: pointer;
+  }
+  .back-text {
+    font-size: 1.1;
+    color: #664400;
+  }
+  .danger-btn {
+    margin-top: 1;
+    padding-top: 0.4;
+    padding-bottom: 0.4;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(80, 0, 0, 0.4);
+    border-color: #ff3333;
+    border-width: 0.04;
+    border-radius: 0.4;
+    cursor: pointer;
+  }
+  .danger-text {
+    font-size: 1;
+    color: #ff3333;
+  }
+</style>
+<div class="settings-panel">
+  <span class="panel-title">SETTINGS</span>
+  <div class="setting-row">
+    <span class="setting-label">SFX VOLUME</span>
+    <div id="btn-sfx" class="setting-btn">
+      <span id="sfx-val" class="setting-value">100%</span>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">MUSIC VOLUME</span>
+    <div id="btn-music" class="setting-btn">
+      <span id="music-val" class="setting-value">100%</span>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">TRAJECTORY</span>
+    <div id="btn-trajectory" class="setting-btn">
+      <span id="trajectory-val" class="setting-value">ON</span>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">THEME</span>
+    <div id="btn-theme" class="setting-btn">
+      <span id="theme-val" class="setting-value">NEON GRID</span>
+    </div>
+  </div>
+  <div id="btn-reset" class="danger-btn">
+    <span class="danger-text">RESET PROGRESS</span>
+  </div>
+  <div id="btn-back" class="back-btn">
+    <span class="back-text">BACK</span>
+  </div>
+</div>

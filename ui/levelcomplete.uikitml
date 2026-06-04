@@ -1,0 +1,88 @@
+<style>
+  .complete-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(10, 0, 0, 0.92);
+    border-color: #ffcc00;
+    border-width: 0.1;
+    border-radius: 1.5;
+  }
+  .panel-title {
+    font-size: 2.5;
+    color: #ffcc00;
+    font-weight: bold;
+  }
+  .stars-display {
+    font-size: 3;
+    color: #ffcc00;
+    margin-top: 0.5;
+  }
+  .stat-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0.5;
+  }
+  .stat-label {
+    font-size: 1.2;
+    color: #885533;
+  }
+  .stat-value {
+    font-size: 1.4;
+    color: #ff6600;
+    font-weight: bold;
+    margin-left: 0.5;
+  }
+  .btn {
+    margin-top: 1;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 2.5;
+    padding-right: 2.5;
+    background-color: rgba(80, 30, 0, 0.6);
+    border-color: #ff6600;
+    border-width: 0.05;
+    border-radius: 0.5;
+    cursor: pointer;
+  }
+  .btn-text {
+    font-size: 1.4;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .btn-green { background-color: rgba(0, 50, 20, 0.6); border-color: #44ff44; }
+  .btn-green .btn-text { color: #44ff44; }
+</style>
+<div class="complete-panel">
+  <span class="panel-title">LEVEL COMPLETE!</span>
+  <span id="lc-stars" class="stars-display">★★★</span>
+  <div class="stat-row">
+    <span class="stat-label">SCORE</span>
+    <span id="lc-score" class="stat-value">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">BLOCKS HIT</span>
+    <span id="lc-blocks" class="stat-value">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">SHOTS USED</span>
+    <span id="lc-shots" class="stat-value">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">BEST</span>
+    <span id="lc-best" class="stat-value">-</span>
+  </div>
+  <div id="btn-next" class="btn btn-green">
+    <span class="btn-text">NEXT LEVEL</span>
+  </div>
+  <div id="btn-retry" class="btn">
+    <span class="btn-text">RETRY</span>
+  </div>
+  <div id="btn-menu" class="btn">
+    <span class="btn-text">MENU</span>
+  </div>
+</div>

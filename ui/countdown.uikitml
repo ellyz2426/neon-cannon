@@ -1,0 +1,28 @@
+<style>
+  .countdown-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1;
+    padding-bottom: 1;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(10, 0, 0, 0.85);
+    border-color: #ffcc00;
+    border-width: 0.08;
+    border-radius: 0.8;
+  }
+  .countdown-num {
+    font-size: 5;
+    color: #ffcc00;
+    font-weight: bold;
+  }
+  .countdown-label {
+    font-size: 1.2;
+    color: #aa5500;
+  }
+</style>
+<div class="countdown-panel">
+  <span id="cd-num" class="countdown-num">3</span>
+  <span id="cd-label" class="countdown-label">GET READY</span>
+</div>

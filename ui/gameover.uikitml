@@ -1,0 +1,75 @@
+<style>
+  .gameover-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(10, 0, 0, 0.92);
+    border-color: #ff3333;
+    border-width: 0.1;
+    border-radius: 1.5;
+  }
+  .panel-title {
+    font-size: 2.5;
+    color: #ff3333;
+    font-weight: bold;
+  }
+  .stat-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0.5;
+  }
+  .stat-label {
+    font-size: 1.2;
+    color: #885533;
+  }
+  .stat-value {
+    font-size: 1.4;
+    color: #ff6600;
+    font-weight: bold;
+    margin-left: 0.5;
+  }
+  .btn {
+    margin-top: 0.8;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 2.5;
+    padding-right: 2.5;
+    background-color: rgba(80, 30, 0, 0.6);
+    border-color: #ff6600;
+    border-width: 0.05;
+    border-radius: 0.5;
+    cursor: pointer;
+  }
+  .btn-text {
+    font-size: 1.4;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .btn-red { background-color: rgba(80, 0, 0, 0.6); border-color: #ff3333; }
+  .btn-red .btn-text { color: #ff3333; }
+</style>
+<div class="gameover-panel">
+  <span class="panel-title">OUT OF AMMO!</span>
+  <div class="stat-row">
+    <span class="stat-label">SCORE</span>
+    <span id="go-score" class="stat-value">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">BLOCKS HIT</span>
+    <span id="go-blocks" class="stat-value">0</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">TARGETS LEFT</span>
+    <span id="go-remaining" class="stat-value">0</span>
+  </div>
+  <div id="btn-retry" class="btn btn-red">
+    <span class="btn-text">RETRY</span>
+  </div>
+  <div id="btn-menu" class="btn">
+    <span class="btn-text">MENU</span>
+  </div>
+</div>

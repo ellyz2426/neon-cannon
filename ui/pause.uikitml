@@ -1,0 +1,51 @@
+<style>
+  .pause-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1.5;
+    padding-bottom: 1.5;
+    padding-left: 2.5;
+    padding-right: 2.5;
+    background-color: rgba(10, 0, 0, 0.92);
+    border-color: #ff4400;
+    border-width: 0.1;
+    border-radius: 1;
+  }
+  .panel-title {
+    font-size: 2.5;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .btn {
+    margin-top: 0.6;
+    padding-top: 0.5;
+    padding-bottom: 0.5;
+    padding-left: 2;
+    padding-right: 2;
+    background-color: rgba(80, 30, 0, 0.6);
+    border-color: #ff6600;
+    border-width: 0.05;
+    border-radius: 0.4;
+    cursor: pointer;
+  }
+  .btn-text {
+    font-size: 1.3;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .btn-green { background-color: rgba(0, 50, 20, 0.6); border-color: #44ff44; }
+  .btn-green .btn-text { color: #44ff44; }
+</style>
+<div class="pause-panel">
+  <span class="panel-title">PAUSED</span>
+  <div id="btn-resume" class="btn btn-green">
+    <span class="btn-text">RESUME</span>
+  </div>
+  <div id="btn-retry" class="btn">
+    <span class="btn-text">RETRY LEVEL</span>
+  </div>
+  <div id="btn-menu" class="btn">
+    <span class="btn-text">MAIN MENU</span>
+  </div>
+</div>

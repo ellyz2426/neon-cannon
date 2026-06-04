@@ -1,0 +1,34 @@
+<style>
+  .power-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0.4;
+    padding-bottom: 0.4;
+    padding-left: 1;
+    padding-right: 1;
+    background-color: rgba(10, 0, 0, 0.85);
+    border-color: #ff4400;
+    border-width: 0.05;
+    border-radius: 0.4;
+  }
+  .power-label {
+    font-size: 0.9;
+    color: #885533;
+  }
+  .power-value {
+    font-size: 1.5;
+    color: #ff6600;
+    font-weight: bold;
+  }
+  .ammo-label {
+    font-size: 0.8;
+    color: #aa5500;
+    margin-top: 0.2;
+  }
+</style>
+<div class="power-panel">
+  <span class="power-label">POWER</span>
+  <span id="power-value" class="power-value">0%</span>
+  <span id="ammo-type" class="ammo-label">CANNONBALL</span>
+</div>

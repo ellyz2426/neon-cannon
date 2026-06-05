@@ -38,6 +38,12 @@
     font-weight: bold;
     margin-top: 1;
   }
+  .xp-value {
+    font-size: 1.4;
+    color: #00ffaa;
+    font-weight: bold;
+    margin-left: 0.5;
+  }
   .back-btn {
     margin-top: 1.5;
     padding-top: 0.4;
@@ -57,6 +63,19 @@
 </style>
 <div class="stats-panel">
   <span class="panel-title">CAREER STATS</span>
+  <span class="section-title">PROGRESSION</span>
+  <div class="stat-row">
+    <span class="stat-label">LEVEL</span>
+    <span id="stat-level" class="xp-value">LV 1</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">XP</span>
+    <span id="stat-xp" class="xp-value">0/500</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">TOTAL SCORE</span>
+    <span id="stat-score" class="xp-value">0</span>
+  </div>
   <span class="section-title">GENERAL</span>
   <div class="stat-row">
     <span class="stat-label">TOTAL SHOTS</span>

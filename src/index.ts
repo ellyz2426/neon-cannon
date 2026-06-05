@@ -26,8 +26,8 @@ interface AmmoType {
   bounces: number; cluster: number; unlockLevel: number;
 }
 
-interface BlockDef {
-  type: 'wood' | 'stone' | 'metal' | 'crystal' | 'tnt';
+type BlockDef = {
+  type: 'wood' | 'stone' | 'metal' | 'crystal' | 'tnt' | 'ice' | 'rubber' | 'plasma';
   x: number; y: number; z: number;
   w?: number; h?: number; d?: number;
 }
@@ -69,6 +69,9 @@ const AMMO_TYPES: AmmoType[] = [
   { name: 'BOUNCER', desc: 'Bounces off surfaces', damage: 1, speed: 1.1, color: '#44ff44', emissive: '#004400', radius: 0.1, explosive: false, explosionRadius: 0, bounces: 2, cluster: 0, unlockLevel: 6 },
   { name: 'CLUSTER', desc: 'Splits into 3 on impact', damage: 0.5, speed: 0.9, color: '#aa44ff', emissive: '#220044', radius: 0.1, explosive: false, explosionRadius: 0, bounces: 0, cluster: 3, unlockLevel: 10 },
   { name: 'HEAVY SHOT', desc: 'Massive damage, slow arc', damage: 3, speed: 0.6, color: '#cccccc', emissive: '#222222', radius: 0.2, explosive: false, explosionRadius: 0, bounces: 0, cluster: 0, unlockLevel: 15 },
+  { name: 'LASER', desc: 'Pierces through blocks', damage: 1, speed: 1.8, color: '#00ffaa', emissive: '#004422', radius: 0.06, explosive: false, explosionRadius: 0, bounces: 0, cluster: 0, unlockLevel: 20 },
+  { name: 'GRAVITY BOMB', desc: 'Pulls blocks inward', damage: 1, speed: 0.8, color: '#6600ff', emissive: '#220066', radius: 0.18, explosive: true, explosionRadius: 2.5, bounces: 0, cluster: 0, unlockLevel: 28 },
+  { name: 'LIGHTNING', desc: 'Chains to nearby blocks', damage: 0.8, speed: 1.3, color: '#ffff00', emissive: '#666600', radius: 0.08, explosive: false, explosionRadius: 0, bounces: 0, cluster: 0, unlockLevel: 35 },
 ];
 
 // ─── Block Properties ────────────────────────────────────────────
@@ -79,6 +82,9 @@ const BLOCK_PROPS: Record<string, { hp: number; color: string; emissive: string;
   metal:   { hp: 3, color: '#aabbcc', emissive: '#334455', points: 300, edge: '#ccddee' },
   crystal: { hp: 1, color: '#00ffff', emissive: '#004444', points: 500, edge: '#44ffff' },
   tnt:     { hp: 1, color: '#ff2200', emissive: '#440000', points: 150, edge: '#ff4433' },
+  ice:     { hp: 1, color: '#aaeeff', emissive: '#224466', points: 250, edge: '#ccffff' },
+  rubber:  { hp: 2, color: '#ff88cc', emissive: '#441133', points: 180, edge: '#ffaadd' },
+  plasma:  { hp: 4, color: '#ff00ff', emissive: '#440044', points: 600, edge: '#ff44ff' },
 };
 
 // ─── Themes ──────────────────────────────────────────────────────
@@ -89,6 +95,9 @@ const THEMES: Theme[] = [
   { name: 'CYAN CIRCUIT', ground: '#081118', grid: '#00aacc', accent: '#00cccc', fog: '#000510', sky: '#000208', glow: '#00aaff', cannon: '#00cccc' },
   { name: 'GOLD NEXUS', ground: '#181408', grid: '#ccaa00', accent: '#ffcc00', fog: '#0a0800', sky: '#080500', glow: '#ffaa00', cannon: '#ffcc00' },
   { name: 'VOID MATRIX', ground: '#0a000a', grid: '#8800cc', accent: '#aa44ff', fog: '#050008', sky: '#020005', glow: '#9900ff', cannon: '#aa44ff' },
+  { name: 'PLASMA DEPTHS', ground: '#0a0818', grid: '#ff00aa', accent: '#ff44cc', fog: '#080010', sky: '#040008', glow: '#ff0088', cannon: '#ff44aa' },
+  { name: 'EMERALD LATTICE', ground: '#081a08', grid: '#00ff44', accent: '#44ff66', fog: '#001005', sky: '#000802', glow: '#00ff33', cannon: '#22ff44' },
+  { name: 'QUANTUM STORM', ground: '#101018', grid: '#4488ff', accent: '#6699ff', fog: '#050510', sky: '#020208', glow: '#3366ff', cannon: '#4488ff' },
 ];
 
 // ─── Level Definitions ───────────────────────────────────────────
@@ -223,6 +232,160 @@ function generateLevels(): LevelDef[] {
       }
     }
     levels.push({ name: ['Void Gate', 'Singularity', 'Event Horizon', 'Dark Matter', 'Quantum Lock', 'Final Stand'][i], zone: 4, shots: 6 + i, blocks });
+  }
+
+  // Zone 6: Plasma Depths (levels 31-36) — ice + plasma blocks
+  levels.push({ name: 'Frozen Core', zone: 5, shots: 5, blocks: [
+    ...Array.from({ length: 5 }, (_, i) => ({ type: 'ice' as const, x: -1 + i * 0.5, y: 0.25, z: -10 })),
+    ...Array.from({ length: 3 }, (_, i) => ({ type: 'ice' as const, x: -0.5 + i * 0.5, y: 0.75, z: -10 })),
+    { type: 'crystal' as const, x: 0, y: 1.25, z: -10 },
+  ]});
+  levels.push({ name: 'Plasma Forge', zone: 5, shots: 7, blocks: [
+    ...Array.from({ length: 4 }, (_, i) => ({ type: 'plasma' as const, x: -0.75 + i * 0.5, y: 0.25, z: -10 })),
+    ...Array.from({ length: 4 }, (_, i) => ({ type: 'ice' as const, x: -0.75 + i * 0.5, y: 0.75, z: -10 })),
+    { type: 'tnt' as const, x: -0.25, y: 1.25, z: -10 }, { type: 'tnt' as const, x: 0.25, y: 1.25, z: -10 },
+  ]});
+  levels.push({ name: 'Cryo Chamber', zone: 5, shots: 5, blocks: [
+    { type: 'metal' as const, x: -1.5, y: 0.25, z: -11 }, { type: 'metal' as const, x: 1.5, y: 0.25, z: -11 },
+    { type: 'metal' as const, x: -1.5, y: 0.75, z: -11 }, { type: 'metal' as const, x: 1.5, y: 0.75, z: -11 },
+    ...Array.from({ length: 5 }, (_, i) => ({ type: 'ice' as const, x: -1 + i * 0.5, y: 0.25, z: -11 })),
+    ...Array.from({ length: 3 }, (_, i) => ({ type: 'ice' as const, x: -0.5 + i * 0.5, y: 0.75, z: -11 })),
+    { type: 'plasma' as const, x: 0, y: 1.25, z: -11 },
+  ]});
+  levels.push({ name: 'Thermal Vent', zone: 5, shots: 4, blocks: [
+    ...Array.from({ length: 3 }, (_, r) => Array.from({ length: 5 }, (_, c) => ({
+      type: (r === 0 ? 'rubber' : c % 2 === 0 ? 'ice' : 'tnt') as BlockDef['type'],
+      x: -1 + c * 0.5, y: 0.25 + r * 0.5, z: -10,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Deep Freeze', zone: 5, shots: 6, blocks: [
+    ...Array.from({ length: 4 }, (_, r) => Array.from({ length: 4 }, (_, c) => ({
+      type: (r === 0 ? 'metal' : (r + c) % 2 === 0 ? 'ice' : 'plasma') as BlockDef['type'],
+      x: -0.75 + c * 0.5, y: 0.25 + r * 0.5, z: -11,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Plasma Boss', zone: 5, shots: 8, blocks: [
+    // Boss structure: thick walls with plasma core
+    ...Array.from({ length: 5 }, (_, r) => ({ type: 'metal' as const, x: -1.5, y: 0.25 + r * 0.5, z: -11 })),
+    ...Array.from({ length: 5 }, (_, r) => ({ type: 'metal' as const, x: 1.5, y: 0.25 + r * 0.5, z: -11 })),
+    ...Array.from({ length: 3 }, (_, r) => ({ type: 'plasma' as const, x: 0, y: 0.25 + r * 0.5, z: -11 })),
+    ...Array.from({ length: 5 }, (_, c) => ({ type: 'stone' as const, x: -1 + c * 0.5, y: 2.75, z: -11 })),
+    { type: 'tnt' as const, x: -0.5, y: 0.75, z: -11 }, { type: 'tnt' as const, x: 0.5, y: 0.75, z: -11 },
+    { type: 'crystal' as const, x: 0, y: 1.75, z: -11 },
+    { type: 'ice' as const, x: -1, y: 0.25, z: -11 }, { type: 'ice' as const, x: 1, y: 0.25, z: -11 },
+  ]});
+
+  // Zone 7: Emerald Lattice (levels 37-42) — rubber blocks + complex structures
+  levels.push({ name: 'Bounce Hall', zone: 6, shots: 5, blocks: [
+    ...Array.from({ length: 3 }, (_, i) => ({ type: 'rubber' as const, x: -0.5 + i * 0.5, y: 0.25, z: -9 })),
+    ...Array.from({ length: 3 }, (_, i) => ({ type: 'wood' as const, x: -0.5 + i * 0.5, y: 0.75, z: -9 })),
+    { type: 'crystal' as const, x: 0, y: 1.25, z: -9 },
+  ]});
+  levels.push({ name: 'Spring Trap', zone: 6, shots: 6, blocks: [
+    { type: 'rubber' as const, x: -1, y: 0.25, z: -10 }, { type: 'rubber' as const, x: 1, y: 0.25, z: -10 },
+    ...Array.from({ length: 4 }, (_, i) => ({ type: 'stone' as const, x: -0.75 + i * 0.5, y: 0.25, z: -10 })),
+    ...Array.from({ length: 4 }, (_, i) => ({ type: 'wood' as const, x: -0.75 + i * 0.5, y: 0.75, z: -10 })),
+    { type: 'tnt' as const, x: 0, y: 1.25, z: -10 },
+  ]});
+  levels.push({ name: 'Lattice Grid', zone: 6, shots: 7, blocks: [
+    ...Array.from({ length: 4 }, (_, r) => Array.from({ length: 5 }, (_, c) => ({
+      type: ((r + c) % 3 === 0 ? 'rubber' : (r + c) % 3 === 1 ? 'wood' : 'stone') as BlockDef['type'],
+      x: -1 + c * 0.5, y: 0.25 + r * 0.5, z: -10,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Emerald Spire', zone: 6, shots: 6, blocks: [
+    ...Array.from({ length: 6 }, (_, r) => ({ type: (r < 2 ? 'metal' : r < 4 ? 'stone' : 'crystal') as BlockDef['type'], x: 0, y: 0.25 + r * 0.5, z: -10 })),
+    { type: 'rubber' as const, x: -0.5, y: 0.25, z: -10 }, { type: 'rubber' as const, x: 0.5, y: 0.25, z: -10 },
+    { type: 'rubber' as const, x: -0.5, y: 0.75, z: -10 }, { type: 'rubber' as const, x: 0.5, y: 0.75, z: -10 },
+    { type: 'tnt' as const, x: -0.5, y: 1.25, z: -10 }, { type: 'tnt' as const, x: 0.5, y: 1.25, z: -10 },
+  ]});
+  levels.push({ name: 'Vine Wall', zone: 6, shots: 7, blocks: [
+    ...Array.from({ length: 5 }, (_, r) => Array.from({ length: 5 }, (_, c) => ({
+      type: (r === 0 || r === 4 ? 'metal' : c === 0 || c === 4 ? 'rubber' : 'wood') as BlockDef['type'],
+      x: -1 + c * 0.5, y: 0.25 + r * 0.5, z: -10,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Lattice Boss', zone: 6, shots: 9, blocks: [
+    // Boss: cross-shaped fortress with rubber shields
+    ...Array.from({ length: 6 }, (_, r) => ({ type: 'metal' as const, x: 0, y: 0.25 + r * 0.5, z: -11 })),
+    ...Array.from({ length: 4 }, (_, c) => ({ type: 'metal' as const, x: -1.5 + c, y: 1.25, z: -11 })),
+    { type: 'rubber' as const, x: -2, y: 1.25, z: -11 }, { type: 'rubber' as const, x: 2, y: 1.25, z: -11 },
+    { type: 'rubber' as const, x: 0, y: 3.25, z: -11 },
+    { type: 'plasma' as const, x: 0, y: 1.75, z: -11 }, { type: 'plasma' as const, x: 0, y: 0.75, z: -11 },
+    { type: 'tnt' as const, x: -0.5, y: 0.25, z: -11 }, { type: 'tnt' as const, x: 0.5, y: 0.25, z: -11 },
+    { type: 'crystal' as const, x: -1, y: 0.75, z: -11 }, { type: 'crystal' as const, x: 1, y: 0.75, z: -11 },
+  ]});
+
+  // Zone 8: Quantum Storm (levels 43-48) — mixed chaos with all block types
+  levels.push({ name: 'Storm Front', zone: 7, shots: 6, blocks: [
+    ...Array.from({ length: 3 }, (_, r) => Array.from({ length: 6 }, (_, c) => ({
+      type: (['wood', 'stone', 'ice', 'rubber', 'crystal', 'tnt'] as const)[c],
+      x: -1.25 + c * 0.5, y: 0.25 + r * 0.5, z: -11,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Thunder Wall', zone: 7, shots: 7, blocks: [
+    ...Array.from({ length: 5 }, (_, r) => Array.from({ length: 5 }, (_, c) => ({
+      type: (r === 0 ? 'plasma' : (r + c) % 4 === 0 ? 'tnt' : (r + c) % 3 === 0 ? 'ice' : 'metal') as BlockDef['type'],
+      x: -1 + c * 0.5, y: 0.25 + r * 0.5, z: -12,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Eye of Storm', zone: 7, shots: 6, blocks: [
+    // Ring shape with open center
+    ...Array.from({ length: 3 }, (_, i) => [
+      { type: 'metal' as const, x: -1, y: 0.25 + i * 0.5, z: -11 },
+      { type: 'metal' as const, x: 1, y: 0.25 + i * 0.5, z: -11 },
+    ]).flat(),
+    ...Array.from({ length: 3 }, (_, c) => ({ type: 'stone' as const, x: -0.5 + c * 0.5, y: 1.75, z: -11 })),
+    ...Array.from({ length: 3 }, (_, c) => ({ type: 'ice' as const, x: -0.5 + c * 0.5, y: 0.25, z: -11 })),
+    { type: 'plasma' as const, x: 0, y: 0.75, z: -11 },
+  ]});
+  levels.push({ name: 'Static Field', zone: 7, shots: 8, blocks: [
+    ...Array.from({ length: 5 }, (_, r) => Array.from({ length: 6 }, (_, c) => ({
+      type: ((r * 6 + c) % 5 === 0 ? 'tnt' : (r * 6 + c) % 4 === 0 ? 'plasma' : (r * 6 + c) % 3 === 0 ? 'rubber' : 'stone') as BlockDef['type'],
+      x: -1.25 + c * 0.5, y: 0.25 + r * 0.5, z: -12,
+    }))).flat(),
+  ]});
+  levels.push({ name: 'Quantum Cage', zone: 7, shots: 8, blocks: [
+    // Full enclosure
+    ...Array.from({ length: 5 }, (_, r) => [
+      { type: 'metal' as const, x: -1.5, y: 0.25 + r * 0.5, z: -11 },
+      { type: 'metal' as const, x: 1.5, y: 0.25 + r * 0.5, z: -11 },
+    ]).flat(),
+    ...Array.from({ length: 5 }, (_, c) => ({ type: 'metal' as const, x: -1 + c * 0.5, y: 2.75, z: -11 })),
+    ...Array.from({ length: 5 }, (_, c) => ({ type: 'ice' as const, x: -1 + c * 0.5, y: 0.25, z: -11 })),
+    { type: 'plasma' as const, x: 0, y: 1.25, z: -11 }, { type: 'crystal' as const, x: -0.5, y: 1.25, z: -11 },
+    { type: 'crystal' as const, x: 0.5, y: 1.25, z: -11 },
+    { type: 'tnt' as const, x: 0, y: 0.75, z: -11 },
+  ]});
+  levels.push({ name: 'Storm Boss', zone: 7, shots: 10, blocks: [
+    // Boss: multi-layer fortress with all block types
+    ...Array.from({ length: 6 }, (_, r) => [
+      { type: 'metal' as const, x: -2, y: 0.25 + r * 0.5, z: -12 },
+      { type: 'metal' as const, x: 2, y: 0.25 + r * 0.5, z: -12 },
+    ]).flat(),
+    ...Array.from({ length: 7 }, (_, c) => ({ type: 'stone' as const, x: -1.5 + c * 0.5, y: 3.25, z: -12 })),
+    ...Array.from({ length: 2 }, (_, r) => Array.from({ length: 5 }, (_, c) => ({
+      type: (c === 2 ? 'plasma' : r === 0 ? 'rubber' : 'ice') as BlockDef['type'],
+      x: -1 + c * 0.5, y: 0.25 + r * 0.5, z: -12,
+    }))).flat(),
+    { type: 'plasma' as const, x: 0, y: 1.75, z: -12 }, { type: 'plasma' as const, x: 0, y: 2.25, z: -12 },
+    { type: 'tnt' as const, x: -1, y: 1.25, z: -12 }, { type: 'tnt' as const, x: 1, y: 1.25, z: -12 },
+    { type: 'crystal' as const, x: 0, y: 2.75, z: -12 },
+  ]});
+
+  // Zone 9: OMEGA (levels 49-54) — final endgame zone
+  for (let i = 0; i < 6; i++) {
+    const rows = 5 + Math.floor(i / 2);
+    const cols = 5 + (i % 2);
+    const bk: BlockDef[] = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const allTypes: BlockDef['type'][] = ['metal', 'stone', 'plasma', 'ice', 'rubber', 'crystal', 'tnt', 'wood'];
+        const t = r < 2 ? 'plasma' : r === rows - 1 ? 'crystal' : (r + c) % 4 === 0 ? 'tnt' : allTypes[(r * cols + c) % allTypes.length];
+        bk.push({ type: t, x: -(cols - 1) * 0.25 + c * 0.5, y: 0.25 + r * 0.5, z: -13 });
+      }
+    }
+    levels.push({ name: ['Omega Gate', 'Omega Vault', 'Omega Spire', 'Omega Core', 'Omega Citadel', 'OMEGA FINAL'][i], zone: 4, shots: 8 + i, blocks: bk });
   }
 
   return levels;
@@ -401,20 +564,94 @@ async function main() {
     totalBlocks: number; levelsClear: number; totalStars: number;
     bestCombo: number; gamesPlayed: number; playTimeMin: number;
     unlockedAmmo: number[]; achievements: string[];
+    xp: number; level: number; prestige: number;
+    cannonSkin: number; unlockedSkins: number[];
+    totalScore: number; perfectLevels: number;
   }
 
   function defaultSave(): SaveData {
     return {
-      levelStars: Array(30).fill(0), highScore: 0, totalShots: 0,
+      levelStars: Array(54).fill(0), highScore: 0, totalShots: 0,
       totalBlocks: 0, levelsClear: 0, totalStars: 0,
       bestCombo: 0, gamesPlayed: 0, playTimeMin: 0,
       unlockedAmmo: [0], achievements: [],
+      xp: 0, level: 1, prestige: 0,
+      cannonSkin: 0, unlockedSkins: [0],
+      totalScore: 0, perfectLevels: 0,
     };
   }
 
   let save: SaveData = defaultSave();
-  try { const s = localStorage.getItem('neon-cannon-save'); if (s) save = { ...defaultSave(), ...JSON.parse(s) }; } catch {}
+  try { const s = localStorage.getItem('neon-cannon-save'); if (s) { const parsed = JSON.parse(s); save = { ...defaultSave(), ...parsed, levelStars: [...defaultSave().levelStars] }; if (parsed.levelStars) { for (let i = 0; i < Math.min(parsed.levelStars.length, save.levelStars.length); i++) save.levelStars[i] = parsed.levelStars[i]; } } } catch {}
   function persist() { try { localStorage.setItem('neon-cannon-save', JSON.stringify(save)); } catch {} }
+
+  // ─── XP & Prestige System ───────────────────────────────────
+
+  const XP_PER_LEVEL = 500;
+  const PRESTIGE_LEVEL = 50;
+
+  function addXP(amount: number) {
+    save.xp += amount;
+    const needed = XP_PER_LEVEL * save.level;
+    while (save.xp >= needed) {
+      save.xp -= needed;
+      save.level++;
+      showToast(`LEVEL UP: ${save.level}!`);
+      audio.play('complete');
+      // Unlock cannon skins at certain levels
+      if (save.level >= 10 && !save.unlockedSkins.includes(1)) { save.unlockedSkins.push(1); showToast('SKIN UNLOCKED: Chrome'); }
+      if (save.level >= 20 && !save.unlockedSkins.includes(2)) { save.unlockedSkins.push(2); showToast('SKIN UNLOCKED: Gold'); }
+      if (save.level >= 30 && !save.unlockedSkins.includes(3)) { save.unlockedSkins.push(3); showToast('SKIN UNLOCKED: Plasma'); }
+      if (save.level >= 40 && !save.unlockedSkins.includes(4)) { save.unlockedSkins.push(4); showToast('SKIN UNLOCKED: Rainbow'); }
+    }
+    if (save.level >= PRESTIGE_LEVEL) {
+      save.prestige++;
+      save.level = 1;
+      save.xp = 0;
+      showToast(`PRESTIGE ${save.prestige}!`);
+    }
+    persist();
+  }
+
+  // ─── Cannon Skins ────────────────────────────────────────────
+
+  const CANNON_SKINS = [
+    { name: 'CLASSIC', color: '#ff6600', glow: '#ff3300' },
+    { name: 'CHROME', color: '#ddddee', glow: '#aabbcc' },
+    { name: 'GOLD', color: '#ffcc00', glow: '#ffaa00' },
+    { name: 'PLASMA', color: '#ff00ff', glow: '#cc00cc' },
+    { name: 'RAINBOW', color: '#ff0000', glow: '#00ff00' },
+  ];
+
+  // ─── Screen Shake ────────────────────────────────────────────
+
+  let shakeIntensity = 0;
+  let shakeDecay = 0;
+
+  function triggerShake(intensity: number, duration: number = 0.3) {
+    shakeIntensity = intensity;
+    shakeDecay = duration;
+  }
+
+  function updateShake(dt: number) {
+    if (shakeIntensity <= 0) return;
+    shakeDecay -= dt;
+    if (shakeDecay <= 0) { shakeIntensity = 0; world.camera.position.x = 0; world.camera.position.y = 1.6; return; }
+    const s = shakeIntensity * (shakeDecay / 0.3);
+    world.camera.position.x += (Math.random() - 0.5) * s * 0.1;
+    world.camera.position.y += 1.6 + (Math.random() - 0.5) * s * 0.05;
+  }
+
+  // ─── Score Multiplier ────────────────────────────────────────
+
+  let scoreMultiplier = 1;
+  let multiplierTimer = 0;
+
+  function activateMultiplier(mult: number, duration: number) {
+    scoreMultiplier = mult;
+    multiplierTimer = duration;
+    showToast(`${mult}x MULTIPLIER!`);
+  }
 
   // ─── Environment ─────────────────────────────────────────────
 
@@ -619,21 +856,38 @@ async function main() {
     b.mesh.visible = false;
     b.edges.visible = false;
     blocksDestroyed++;
-    score += b.points * (1 + combo * 0.2);
+    const blockScore = b.points * (1 + combo * 0.2) * scoreMultiplier;
+    score += blockScore;
+    save.totalScore += Math.floor(blockScore);
     combo++;
     if (combo > maxCombo) maxCombo = combo;
 
     audio.play('destroy');
     particles.emit(new Vector3(b.x, b.y, b.z), 8, BLOCK_PROPS[b.type].color, 2, 0.8);
 
+    // XP from destroying blocks
+    addXP(Math.floor(b.points / 10));
+
     if (combo > 2) {
       audio.play('combo');
       showToast(`${combo}x COMBO!`);
     }
 
+    // Combo-based multiplier bonuses
+    if (combo === 5) activateMultiplier(2, 5);
+    if (combo === 10) activateMultiplier(3, 5);
+    if (combo === 20) activateMultiplier(5, 5);
+
+    // Ice block shatters: bonus score + extra particles
+    if (b.type === 'ice') {
+      particles.emit(new Vector3(b.x, b.y, b.z), 15, '#aaeeff', 3, 1);
+      score += 100 * scoreMultiplier; // Ice shatter bonus
+    }
+
     if (b.type === 'tnt') {
       audio.play('explode');
       particles.emit(new Vector3(b.x, b.y, b.z), 20, '#ff4400', 4, 1.2);
+      triggerShake(0.4);
       // Chain explosion
       for (const ob of blocks) {
         if (ob.destroyed) continue;
@@ -653,7 +907,6 @@ async function main() {
     // Check for floating blocks → make them fall
     for (const ob of blocks) {
       if (ob.destroyed || ob.y <= 0.3) continue;
-      // Check if any block is below supporting this one
       const hasSupport = blocks.some(sb => !sb.destroyed && sb !== ob &&
         Math.abs(sb.x - ob.x) < 0.3 && Math.abs(sb.z - ob.z) < 0.3 &&
         sb.y < ob.y && ob.y - sb.y < 0.6);
@@ -766,12 +1019,25 @@ async function main() {
 
       // Block collision
       const ammo = AMMO_TYPES[p.ammoType];
+      let hitBlock = false;
       for (const b of blocks) {
         if (b.destroyed) continue;
         const dx = Math.abs(p.mesh.position.x - b.x);
         const dy = Math.abs(p.mesh.position.y - b.y);
         const dz = Math.abs(p.mesh.position.z - b.z);
         if (dx < (b.w / 2 + ammo.radius) && dy < (b.h / 2 + ammo.radius) && dz < (b.d / 2 + ammo.radius)) {
+          // Rubber blocks deflect projectiles (unless it's a heavy shot)
+          if (b.type === 'rubber' && ammo.damage < 3) {
+            audio.play('bounce');
+            particles.emit(new Vector3(b.x, b.y, b.z), 6, '#ff88cc', 2, 0.5);
+            p.vx = -p.vx * 0.8;
+            p.vz = -p.vz * 0.8;
+            p.vy = Math.abs(p.vy) * 0.6 + 2;
+            b.hp -= 0.5;
+            if (b.hp <= 0) destroyBlock(b);
+            continue;
+          }
+
           // Hit!
           b.hp -= ammo.damage;
           if (b.hp <= 0) {
@@ -779,7 +1045,6 @@ async function main() {
           } else {
             audio.play('hit');
             particles.emit(new Vector3(b.x, b.y, b.z), 4, BLOCK_PROPS[b.type].color, 1.5);
-            // Flash
             const mat = b.mesh.material as MeshStandardMaterial;
             mat.emissiveIntensity = 0.8;
             setTimeout(() => { mat.emissiveIntensity = 0.15; }, 150);
@@ -787,24 +1052,73 @@ async function main() {
 
           if (ammo.explosive) {
             audio.play('explode');
+            triggerShake(0.3);
             particles.emit(p.mesh.position.clone(), 25, ammo.color, 5, 1);
+            // Gravity bomb pulls blocks toward impact
+            const isGravBomb = ammo.name === 'GRAVITY BOMB';
             for (const ob of blocks) {
               if (ob.destroyed) continue;
               const d = p.mesh.position.distanceTo(new Vector3(ob.x, ob.y, ob.z));
               if (d < ammo.explosionRadius) {
                 ob.hp -= 1;
+                if (isGravBomb) {
+                  // Pull block toward center
+                  const pullStr = 0.3;
+                  ob.x += (p.mesh.position.x - ob.x) * pullStr;
+                  ob.y += (p.mesh.position.y - ob.y) * pullStr;
+                  ob.mesh.position.set(ob.x, ob.y, ob.z);
+                  ob.edges.position.set(ob.x, ob.y, ob.z);
+                  ob.falling = true;
+                  ob.vy = -1;
+                }
                 if (ob.hp <= 0) destroyBlock(ob);
               }
             }
+          }
+
+          // Lightning chains to nearby blocks
+          if (ammo.name === 'LIGHTNING') {
+            let chainCount = 0;
+            const chainedBlocks = new Set<BlockInstance>();
+            chainedBlocks.add(b);
+            let lastPos = new Vector3(b.x, b.y, b.z);
+            while (chainCount < 4) {
+              let nearest: BlockInstance | null = null;
+              let nearestDist = 2.0;
+              for (const ob of blocks) {
+                if (ob.destroyed || chainedBlocks.has(ob)) continue;
+                const d = lastPos.distanceTo(new Vector3(ob.x, ob.y, ob.z));
+                if (d < nearestDist) { nearestDist = d; nearest = ob; }
+              }
+              if (!nearest) break;
+              chainedBlocks.add(nearest);
+              nearest.hp -= ammo.damage * 0.6;
+              particles.emit(new Vector3(nearest.x, nearest.y, nearest.z), 6, '#ffff00', 2, 0.4);
+              if (nearest.hp <= 0) destroyBlock(nearest);
+              lastPos = new Vector3(nearest.x, nearest.y, nearest.z);
+              chainCount++;
+            }
+            if (chainCount > 0) showToast(`CHAIN ${chainCount + 1}!`);
           }
 
           if (ammo.cluster > 0) {
             spawnClusterProjectiles(p.mesh.position.clone(), p.vx * 0.5, p.vz * 0.5);
           }
 
+          // Laser pierces through (don't stop on hit)
+          if (ammo.name === 'LASER') {
+            hitBlock = true;
+            continue; // Don't break, keep going through
+          }
+
           handleProjectileImpact(p);
+          hitBlock = true;
           break;
         }
+      }
+      // For laser, check if it went through everything and went off-screen
+      if (hitBlock && ammo.name === 'LASER' && (p.mesh.position.z < -20 || p.mesh.position.y < -2)) {
+        handleProjectileImpact(p);
       }
     }
   }
@@ -893,14 +1207,14 @@ async function main() {
 
   function setText(doc: UIKitDocument | null, id: string, text: string) {
     if (!doc) return;
-    const el = doc.getElementById(id);
-    if (el) el.textContent = text;
+    const el = doc.getElementById(id) as any;
+    if (el && el.text) el.text.value = text;
   }
 
   function setBtn(doc: UIKitDocument | null, id: string, cb: () => void) {
     if (!doc) return;
     const el = doc.getElementById(id);
-    if (el) el.onclick = cb;
+    if (el) el.addEventListener('click', cb);
   }
 
   // ─── Toast System ────────────────────────────────────────────
@@ -959,17 +1273,17 @@ async function main() {
   function startArcadeLevel() {
     // Generate a random level
     const blockCount = 8 + Math.floor(Math.random() * 12);
-    const blocks: BlockDef[] = [];
+    const arcadeBlockDefs: BlockDef[] = [];
     const types: BlockDef['type'][] = ['wood', 'stone', 'metal', 'crystal', 'tnt'];
     for (let i = 0; i < blockCount; i++) {
       const col = Math.floor(i % 5);
       const row = Math.floor(i / 5);
-      blocks.push({
+      arcadeBlockDefs.push({
         type: types[Math.floor(Math.random() * types.length)],
         x: -1 + col * 0.5, y: 0.25 + row * 0.5, z: -9
       });
     }
-    const def: LevelDef = { name: 'Arcade', zone: Math.floor(Math.random() * 5), shots: Math.ceil(blockCount * 0.6), blocks };
+    const def: LevelDef = { name: 'Arcade', zone: Math.floor(Math.random() * 5), shots: Math.ceil(blockCount * 0.6), blocks: arcadeBlockDefs };
     currentThemeIdx = def.zone;
     shotsLeft = def.shots;
     shotsFired = 0; score = 0; combo = 0; maxCombo = 0; blocksDestroyed = 0;
@@ -1014,6 +1328,12 @@ async function main() {
       save.totalBlocks += blocksDestroyed;
       if (score > save.highScore) save.highScore = score;
       if (maxCombo > save.bestCombo) save.bestCombo = maxCombo;
+      // Perfect level bonus
+      if (stars === 3) {
+        save.perfectLevels++;
+        addXP(200);
+      }
+      addXP(100 + Math.floor(score / 100)); // Level completion XP
       persist();
 
       audio.play('complete');
@@ -1052,7 +1372,7 @@ async function main() {
   function updateLevelSelect() {
     const doc = getDoc('levelselect');
     if (!doc) return;
-    const zoneNames = ['ZONE 1: NEON GRID', 'ZONE 2: CRIMSON FORGE', 'ZONE 3: CYAN CIRCUIT', 'ZONE 4: GOLD NEXUS', 'ZONE 5: VOID MATRIX'];
+    const zoneNames = ['ZONE 1: NEON GRID', 'ZONE 2: CRIMSON FORGE', 'ZONE 3: CYAN CIRCUIT', 'ZONE 4: GOLD NEXUS', 'ZONE 5: VOID MATRIX', 'ZONE 6: PLASMA DEPTHS', 'ZONE 7: EMERALD LATTICE', 'ZONE 8: QUANTUM STORM', 'ZONE 9: OMEGA'];
     setText(doc, 'zone-name', zoneNames[levelZone] || zoneNames[0]);
 
     for (let i = 1; i <= 10; i++) {
@@ -1069,7 +1389,7 @@ async function main() {
     }
 
     setBtn(doc, 'btn-prev-zone', () => { if (levelZone > 0) { levelZone--; audio.play('select'); updateLevelSelect(); } });
-    setBtn(doc, 'btn-next-zone', () => { if (levelZone < 4) { levelZone++; audio.play('select'); updateLevelSelect(); } });
+    setBtn(doc, 'btn-next-zone', () => { if (levelZone < 8) { levelZone++; audio.play('select'); updateLevelSelect(); } });
     setBtn(doc, 'btn-back', () => { audio.play('select'); goToState('title'); });
   }
 
@@ -1151,42 +1471,79 @@ async function main() {
     setText(doc, 'stat-combo', `${save.bestCombo}`);
     setText(doc, 'stat-games', `${save.gamesPlayed}`);
     setText(doc, 'stat-time', `${save.playTimeMin}m`);
+    setText(doc, 'stat-level', `LV ${save.level}${save.prestige > 0 ? ` P${save.prestige}` : ''}`);
+    setText(doc, 'stat-xp', `${save.xp}/${XP_PER_LEVEL * save.level}`);
+    setText(doc, 'stat-score', `${save.totalScore}`);
     setBtn(doc, 'btn-back', () => { audio.play('select'); goToState('title'); });
   }
 
   // ─── Achievements ────────────────────────────────────────────
 
   const ACHIEVEMENTS: Achievement[] = [
-    { id: 'first_shot', name: 'FIRST SHOT', desc: 'Fire your first cannonball', icon: '*', check: () => save.totalShots >= 1 },
-    { id: 'demolition', name: 'DEMOLITION', desc: 'Destroy 10 blocks', icon: '*', check: () => save.totalBlocks >= 10 },
-    { id: 'wrecking_ball', name: 'WRECKING BALL', desc: 'Destroy 100 blocks', icon: '*', check: () => save.totalBlocks >= 100 },
-    { id: 'destroyer', name: 'DESTROYER', desc: 'Destroy 500 blocks', icon: '*', check: () => save.totalBlocks >= 500 },
-    { id: 'sharpshooter', name: 'SHARPSHOOTER', desc: 'Complete a level with 1 shot', icon: '*', check: () => save.levelStars.some(s => s === 3) },
-    { id: 'perfectionist', name: 'PERFECTIONIST', desc: 'Get 3 stars on 5 levels', icon: '*', check: () => save.levelStars.filter(s => s === 3).length >= 5 },
-    { id: 'zone_clear_1', name: 'GRID MASTER', desc: 'Clear Zone 1', icon: '*', check: () => save.levelStars.slice(0, 6).every(s => s > 0) },
-    { id: 'zone_clear_2', name: 'FORGE MASTER', desc: 'Clear Zone 2', icon: '*', check: () => save.levelStars.slice(6, 12).every(s => s > 0) },
-    { id: 'zone_clear_3', name: 'CIRCUIT MASTER', desc: 'Clear Zone 3', icon: '*', check: () => save.levelStars.slice(12, 18).every(s => s > 0) },
-    { id: 'zone_clear_4', name: 'NEXUS MASTER', desc: 'Clear Zone 4', icon: '*', check: () => save.levelStars.slice(18, 24).every(s => s > 0) },
-    { id: 'zone_clear_5', name: 'VOID MASTER', desc: 'Clear Zone 5', icon: '*', check: () => save.levelStars.slice(24, 30).every(s => s > 0) },
-    { id: 'combo_3', name: 'TRIPLE THREAT', desc: 'Get a 3x combo', icon: '*', check: () => save.bestCombo >= 3 },
-    { id: 'combo_5', name: 'COMBO KING', desc: 'Get a 5x combo', icon: '*', check: () => save.bestCombo >= 5 },
-    { id: 'combo_10', name: 'CHAIN MASTER', desc: 'Get a 10x combo', icon: '*', check: () => save.bestCombo >= 10 },
-    { id: 'highscore_1k', name: 'SCOREKEEPER', desc: 'Score 1,000 in a level', icon: '*', check: () => save.highScore >= 1000 },
-    { id: 'highscore_5k', name: 'HIGH ROLLER', desc: 'Score 5,000 in a level', icon: '*', check: () => save.highScore >= 5000 },
-    { id: 'highscore_10k', name: 'LEGENDARY', desc: 'Score 10,000 in a level', icon: '*', check: () => save.highScore >= 10000 },
-    { id: 'games_10', name: 'REGULAR', desc: 'Play 10 games', icon: '*', check: () => save.gamesPlayed >= 10 },
-    { id: 'games_50', name: 'VETERAN', desc: 'Play 50 games', icon: '*', check: () => save.gamesPlayed >= 50 },
-    { id: 'all_clear', name: 'CONQUEROR', desc: 'Clear all 30 levels', icon: '*', check: () => save.levelsClear >= 30 },
-    { id: 'ammo_fireball', name: 'PYRO', desc: 'Unlock Fireball ammo', icon: '*', check: () => save.unlockedAmmo.includes(1) },
-    { id: 'ammo_bouncer', name: 'RICOCHET', desc: 'Unlock Bouncer ammo', icon: '*', check: () => save.unlockedAmmo.includes(2) },
-    { id: 'ammo_cluster', name: 'CLUSTER BOMB', desc: 'Unlock Cluster ammo', icon: '*', check: () => save.unlockedAmmo.includes(3) },
-    { id: 'ammo_heavy', name: 'BIG GUNS', desc: 'Unlock Heavy Shot', icon: '*', check: () => save.unlockedAmmo.includes(4) },
-    { id: 'full_stars_z1', name: 'PERFECT GRID', desc: '3 stars on all Zone 1', icon: '*', check: () => save.levelStars.slice(0, 6).every(s => s === 3) },
-    { id: 'shots_100', name: 'CENTURION', desc: 'Fire 100 shots total', icon: '*', check: () => save.totalShots >= 100 },
-    { id: 'shots_500', name: 'ARTILLERY', desc: 'Fire 500 shots total', icon: '*', check: () => save.totalShots >= 500 },
-    { id: 'blocks_1000', name: 'OBLITERATOR', desc: 'Destroy 1,000 blocks', icon: '*', check: () => save.totalBlocks >= 1000 },
-    { id: 'crystal_collector', name: 'CRYSTAL COLLECTOR', desc: 'Earn 10,000 total score', icon: '*', check: () => save.highScore >= 10000 },
-    { id: 'final_boss', name: 'FINAL BOSS', desc: 'Beat level 30', icon: '*', check: () => (save.levelStars[29] || 0) > 0 },
+    // Original achievements (30)
+    { id: 'first_shot', name: 'FIRST SHOT', desc: 'Fire your first cannonball', icon: '🎯', check: () => save.totalShots >= 1 },
+    { id: 'demolition', name: 'DEMOLITION', desc: 'Destroy 10 blocks', icon: '💥', check: () => save.totalBlocks >= 10 },
+    { id: 'wrecking_ball', name: 'WRECKING BALL', desc: 'Destroy 100 blocks', icon: '🔨', check: () => save.totalBlocks >= 100 },
+    { id: 'destroyer', name: 'DESTROYER', desc: 'Destroy 500 blocks', icon: '💣', check: () => save.totalBlocks >= 500 },
+    { id: 'sharpshooter', name: 'SHARPSHOOTER', desc: 'Get 3 stars on any level', icon: '⭐', check: () => save.levelStars.some(s => s === 3) },
+    { id: 'perfectionist', name: 'PERFECTIONIST', desc: 'Get 3 stars on 5 levels', icon: '🌟', check: () => save.levelStars.filter(s => s === 3).length >= 5 },
+    { id: 'zone_clear_1', name: 'GRID MASTER', desc: 'Clear Zone 1', icon: '🏅', check: () => save.levelStars.slice(0, 6).every(s => s > 0) },
+    { id: 'zone_clear_2', name: 'FORGE MASTER', desc: 'Clear Zone 2', icon: '🏅', check: () => save.levelStars.slice(6, 12).every(s => s > 0) },
+    { id: 'zone_clear_3', name: 'CIRCUIT MASTER', desc: 'Clear Zone 3', icon: '🏅', check: () => save.levelStars.slice(12, 18).every(s => s > 0) },
+    { id: 'zone_clear_4', name: 'NEXUS MASTER', desc: 'Clear Zone 4', icon: '🏅', check: () => save.levelStars.slice(18, 24).every(s => s > 0) },
+    { id: 'zone_clear_5', name: 'VOID MASTER', desc: 'Clear Zone 5', icon: '🏅', check: () => save.levelStars.slice(24, 30).every(s => s > 0) },
+    { id: 'combo_3', name: 'TRIPLE THREAT', desc: 'Get a 3x combo', icon: '🔥', check: () => save.bestCombo >= 3 },
+    { id: 'combo_5', name: 'COMBO KING', desc: 'Get a 5x combo', icon: '🔥', check: () => save.bestCombo >= 5 },
+    { id: 'combo_10', name: 'CHAIN MASTER', desc: 'Get a 10x combo', icon: '⚡', check: () => save.bestCombo >= 10 },
+    { id: 'highscore_1k', name: 'SCOREKEEPER', desc: 'Score 1,000 in a level', icon: '📊', check: () => save.highScore >= 1000 },
+    { id: 'highscore_5k', name: 'HIGH ROLLER', desc: 'Score 5,000 in a level', icon: '📊', check: () => save.highScore >= 5000 },
+    { id: 'highscore_10k', name: 'LEGENDARY', desc: 'Score 10,000 in a level', icon: '👑', check: () => save.highScore >= 10000 },
+    { id: 'games_10', name: 'REGULAR', desc: 'Play 10 games', icon: '🎮', check: () => save.gamesPlayed >= 10 },
+    { id: 'games_50', name: 'VETERAN', desc: 'Play 50 games', icon: '🎖️', check: () => save.gamesPlayed >= 50 },
+    { id: 'all_clear_30', name: 'CONQUEROR', desc: 'Clear first 30 levels', icon: '🏆', check: () => save.levelStars.slice(0, 30).filter(s => s > 0).length >= 30 },
+    { id: 'ammo_fireball', name: 'PYRO', desc: 'Unlock Fireball ammo', icon: '🔥', check: () => save.unlockedAmmo.includes(1) },
+    { id: 'ammo_bouncer', name: 'RICOCHET', desc: 'Unlock Bouncer ammo', icon: '🏀', check: () => save.unlockedAmmo.includes(2) },
+    { id: 'ammo_cluster', name: 'CLUSTER BOMB', desc: 'Unlock Cluster ammo', icon: '💠', check: () => save.unlockedAmmo.includes(3) },
+    { id: 'ammo_heavy', name: 'BIG GUNS', desc: 'Unlock Heavy Shot', icon: '🎳', check: () => save.unlockedAmmo.includes(4) },
+    { id: 'full_stars_z1', name: 'PERFECT GRID', desc: '3 stars on all Zone 1', icon: '✨', check: () => save.levelStars.slice(0, 6).every(s => s === 3) },
+    { id: 'shots_100', name: 'CENTURION', desc: 'Fire 100 shots total', icon: '💫', check: () => save.totalShots >= 100 },
+    { id: 'shots_500', name: 'ARTILLERY', desc: 'Fire 500 shots total', icon: '🎆', check: () => save.totalShots >= 500 },
+    { id: 'blocks_1000', name: 'OBLITERATOR', desc: 'Destroy 1,000 blocks', icon: '☄️', check: () => save.totalBlocks >= 1000 },
+    { id: 'score_10k', name: 'SCORE HUNTER', desc: 'Earn 10,000 total score', icon: '💰', check: () => save.totalScore >= 10000 },
+    { id: 'final_boss_30', name: 'FINAL BOSS', desc: 'Beat level 30', icon: '🏴', check: () => (save.levelStars[29] || 0) > 0 },
+    // New achievements (32 more = 62 total)
+    { id: 'zone_clear_6', name: 'PLASMA MASTER', desc: 'Clear Zone 6', icon: '🏅', check: () => save.levelStars.slice(30, 36).every(s => s > 0) },
+    { id: 'zone_clear_7', name: 'LATTICE MASTER', desc: 'Clear Zone 7', icon: '🏅', check: () => save.levelStars.slice(36, 42).every(s => s > 0) },
+    { id: 'zone_clear_8', name: 'STORM MASTER', desc: 'Clear Zone 8', icon: '🏅', check: () => save.levelStars.slice(42, 48).every(s => s > 0) },
+    { id: 'zone_clear_9', name: 'OMEGA MASTER', desc: 'Clear Omega Zone', icon: '👑', check: () => save.levelStars.slice(48, 54).every(s => s > 0) },
+    { id: 'all_clear_54', name: 'GRAND CHAMPION', desc: 'Clear all 54 levels', icon: '🏆', check: () => save.levelStars.filter(s => s > 0).length >= 54 },
+    { id: 'all_perfect', name: 'ABSOLUTE PERFECTION', desc: '3 stars on all 54 levels', icon: '💎', check: () => save.levelStars.every(s => s === 3) },
+    { id: 'ammo_laser', name: 'BEAM RIDER', desc: 'Unlock Laser ammo', icon: '🔫', check: () => save.unlockedAmmo.includes(5) },
+    { id: 'ammo_gravity', name: 'SINGULARITY', desc: 'Unlock Gravity Bomb', icon: '🕳️', check: () => save.unlockedAmmo.includes(6) },
+    { id: 'ammo_lightning', name: 'THUNDER GOD', desc: 'Unlock Lightning ammo', icon: '⚡', check: () => save.unlockedAmmo.includes(7) },
+    { id: 'combo_15', name: 'UNSTOPPABLE', desc: 'Get a 15x combo', icon: '🔥', check: () => save.bestCombo >= 15 },
+    { id: 'combo_20', name: 'CHAIN REACTION', desc: 'Get a 20x combo', icon: '⚡', check: () => save.bestCombo >= 20 },
+    { id: 'highscore_25k', name: 'SCORE LORD', desc: 'Score 25,000 in a level', icon: '👑', check: () => save.highScore >= 25000 },
+    { id: 'highscore_50k', name: 'TRANSCENDENT', desc: 'Score 50,000 in a level', icon: '✨', check: () => save.highScore >= 50000 },
+    { id: 'score_50k', name: 'FORTUNE', desc: 'Earn 50,000 total score', icon: '💰', check: () => save.totalScore >= 50000 },
+    { id: 'score_100k', name: 'MOGUL', desc: 'Earn 100,000 total score', icon: '💎', check: () => save.totalScore >= 100000 },
+    { id: 'games_100', name: 'DEDICATED', desc: 'Play 100 games', icon: '🏆', check: () => save.gamesPlayed >= 100 },
+    { id: 'shots_1000', name: 'GUNNER', desc: 'Fire 1,000 shots', icon: '💥', check: () => save.totalShots >= 1000 },
+    { id: 'blocks_5000', name: 'ANNIHILATOR', desc: 'Destroy 5,000 blocks', icon: '☄️', check: () => save.totalBlocks >= 5000 },
+    { id: 'xp_level_10', name: 'RISING STAR', desc: 'Reach level 10', icon: '⬆️', check: () => save.level >= 10 || save.prestige > 0 },
+    { id: 'xp_level_25', name: 'VETERAN CANNON', desc: 'Reach level 25', icon: '⬆️', check: () => save.level >= 25 || save.prestige > 0 },
+    { id: 'xp_level_50', name: 'ELITE', desc: 'Reach level 50', icon: '💫', check: () => save.level >= 50 || save.prestige > 0 },
+    { id: 'prestige_1', name: 'PRESTIGE I', desc: 'Prestige once', icon: '🌀', check: () => save.prestige >= 1 },
+    { id: 'prestige_3', name: 'PRESTIGE III', desc: 'Prestige three times', icon: '🌀', check: () => save.prestige >= 3 },
+    { id: 'skin_chrome', name: 'SILVER CANNON', desc: 'Unlock Chrome skin', icon: '🔧', check: () => save.unlockedSkins.includes(1) },
+    { id: 'skin_gold', name: 'GOLDEN CANNON', desc: 'Unlock Gold skin', icon: '🥇', check: () => save.unlockedSkins.includes(2) },
+    { id: 'skin_plasma', name: 'PLASMA CANNON', desc: 'Unlock Plasma skin', icon: '🟣', check: () => save.unlockedSkins.includes(3) },
+    { id: 'skin_rainbow', name: 'RAINBOW CANNON', desc: 'Unlock Rainbow skin', icon: '🌈', check: () => save.unlockedSkins.includes(4) },
+    { id: 'perfect_10', name: 'PERFECT TEN', desc: '3 stars on 10 levels', icon: '⭐', check: () => save.levelStars.filter(s => s === 3).length >= 10 },
+    { id: 'perfect_30', name: 'STAR COLLECTOR', desc: '3 stars on 30 levels', icon: '⭐', check: () => save.levelStars.filter(s => s === 3).length >= 30 },
+    { id: 'full_stars_z2', name: 'PERFECT FORGE', desc: '3 stars on all Zone 2', icon: '✨', check: () => save.levelStars.slice(6, 12).every(s => s === 3) },
+    { id: 'full_stars_z3', name: 'PERFECT CIRCUIT', desc: '3 stars on all Zone 3', icon: '✨', check: () => save.levelStars.slice(12, 18).every(s => s === 3) },
+    { id: 'boss_slayer', name: 'BOSS SLAYER', desc: 'Beat all 3 boss levels', icon: '🗡️', check: () => (save.levelStars[35] || 0) > 0 && (save.levelStars[41] || 0) > 0 && (save.levelStars[47] || 0) > 0 },
   ];
 
   function checkAchievements() {
@@ -1265,7 +1622,13 @@ async function main() {
 
   goToState('title');
 
-  world.onUpdate((dt: number) => {
+  const _origWorldUpdate = world.update.bind(world);
+  (world as any).update = (delta: number, time: number) => {
+    _origWorldUpdate(delta, time);
+    gameUpdate(delta);
+  };
+
+  function gameUpdate(dt: number) {
     // Wire panels once docs are ready
     if (!titleWired) titleWired = wireTitle();
     if (!modeWired) modeWired = wireModeSelect();
@@ -1273,6 +1636,13 @@ async function main() {
     if (!helpWired) helpWired = wireHelp();
 
     particles.update(dt);
+    updateShake(dt);
+
+    // Multiplier timer
+    if (multiplierTimer > 0) {
+      multiplierTimer -= dt;
+      if (multiplierTimer <= 0) { scoreMultiplier = 1; }
+    }
 
     // Animate decorations
     const time = performance.now() * 0.001;
@@ -1324,7 +1694,7 @@ async function main() {
     }
 
     // Keyboard input
-    const kb = world.input.keyboard;
+    const kb = (world.input as any).keyboard;
 
     // State-specific logic
     if (state === 'countdown') {
@@ -1346,8 +1716,8 @@ async function main() {
       if (kb.getKeyPressed('ArrowRight')) cannonYaw -= 1.0 * dt;
       cannonYaw = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cannonYaw));
 
-      // Ammo selection keys
-      for (let i = 1; i <= 5; i++) {
+      // Ammo selection keys (1-8)
+      for (let i = 1; i <= 8; i++) {
         if (kb.getKeyDown(`Digit${i}`) && save.unlockedAmmo.includes(i - 1)) {
           currentAmmo = i - 1;
           audio.play('select');
@@ -1432,7 +1802,7 @@ async function main() {
         }
       }
     }
-  });
+  }
 }
 
 main().catch(console.error);

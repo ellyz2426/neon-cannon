@@ -1,0 +1,56 @@
+<style>
+  .survival-panel {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 1.2;
+    padding-right: 1.2;
+    background-color: rgba(10, 0, 0, 0.85);
+    border-color: #ff3300;
+    border-width: 0.05;
+    border-radius: 0.5;
+  }
+  .surv-title {
+    font-size: 1.2;
+    color: #ff3300;
+    font-weight: bold;
+  }
+  .surv-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 0.2;
+  }
+  .surv-label {
+    font-size: 0.9;
+    color: #884422;
+  }
+  .surv-value {
+    font-size: 1.1;
+    color: #ff6600;
+    font-weight: bold;
+    margin-left: 0.4;
+  }
+  .wave-value {
+    color: #ff3300;
+  }
+</style>
+<div class="survival-panel">
+  <span class="surv-title">SURVIVAL</span>
+  <div class="surv-row">
+    <span class="surv-label">WAVE</span>
+    <span id="surv-wave" class="surv-value wave-value">1</span>
+  </div>
+  <div class="surv-row">
+    <span class="surv-label">SCORE</span>
+    <span id="surv-score" class="surv-value">0</span>
+  </div>
+  <div class="surv-row">
+    <span class="surv-label">SHOTS</span>
+    <span id="surv-shots" class="surv-value">10</span>
+  </div>
+  <div class="surv-row">
+    <span class="surv-label">BLOCKS</span>
+    <span id="surv-blocks" class="surv-value">0</span>
+  </div>
+</div>

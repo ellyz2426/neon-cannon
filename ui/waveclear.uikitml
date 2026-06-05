@@ -1,0 +1,59 @@
+<style>
+  .wave-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2;
+    padding-bottom: 2;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(10, 0, 0, 0.92);
+    border-color: #ff3300;
+    border-width: 0.08;
+    border-radius: 1;
+  }
+  .wave-title {
+    font-size: 3;
+    color: #ff3300;
+    font-weight: bold;
+  }
+  .wave-sub {
+    font-size: 1.5;
+    color: #ff6600;
+    margin-top: 0.3;
+  }
+  .wave-stat {
+    font-size: 1.2;
+    color: #aa5500;
+    margin-top: 0.3;
+  }
+  .btn {
+    margin-top: 1;
+    padding-top: 0.6;
+    padding-bottom: 0.6;
+    padding-left: 3;
+    padding-right: 3;
+    background-color: rgba(80, 20, 0, 0.6);
+    border-color: #ff4400;
+    border-width: 0.05;
+    border-radius: 0.5;
+    cursor: pointer;
+  }
+  .btn-text {
+    font-size: 1.4;
+    color: #ff4400;
+    font-weight: bold;
+  }
+</style>
+<div class="wave-panel">
+  <span id="wc-title" class="wave-title">WAVE CLEAR!</span>
+  <span id="wc-wave" class="wave-sub">Wave 1 Complete</span>
+  <span id="wc-score" class="wave-stat">Score: 0</span>
+  <span id="wc-bonus" class="wave-stat">Bonus Shots: +3</span>
+  <div id="btn-next-wave" class="btn">
+    <span class="btn-text">NEXT WAVE</span>
+  </div>
+  <div id="btn-surv-menu" class="btn">
+    <span class="btn-text">QUIT</span>
+  </div>
+</div>

@@ -86,6 +86,10 @@
     <span class="btn-text">DAILY CHALLENGE</span>
     <span class="btn-desc">New layout every day</span>
   </div>
+  <div id="btn-survival" class="btn btn-red">
+    <span class="btn-text">SURVIVAL</span>
+    <span class="btn-desc">Endless waves, earn bonus shots</span>
+  </div>
   <div id="btn-back" class="back-btn">
     <span class="back-text">BACK</span>
   </div>

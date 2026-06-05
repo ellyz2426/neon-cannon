@@ -15,9 +15,10 @@ import {
 
 type GameState = 'title' | 'modeselect' | 'levelselect' | 'ammo' |
   'countdown' | 'aiming' | 'charging' | 'firing' | 'impact' |
-  'levelcomplete' | 'gameover' | 'achievements' | 'settings' | 'help' | 'stats' | 'pause';
+  'levelcomplete' | 'gameover' | 'achievements' | 'settings' | 'help' | 'stats' | 'pause' |
+  'waveclear';
 
-type GameMode = 'campaign' | 'arcade' | 'freeplay' | 'timeattack' | 'daily';
+type GameMode = 'campaign' | 'arcade' | 'freeplay' | 'timeattack' | 'daily' | 'survival';
 
 interface AmmoType {
   name: string; desc: string; damage: number; speed: number;
@@ -459,15 +460,36 @@ class AudioManager {
     this.musicGain = c.createGain();
     this.musicGain.gain.value = this.musicVol * 0.06;
     this.musicGain.connect(c.destination);
+
+    // Arpeggiator-style background music
+    const notes = [55, 73.42, 82.41, 110, 130.81, 146.83, 164.81, 110];
+    let noteIdx = 0;
+
     this.musicOsc = c.createOscillator();
     this.musicOsc.type = 'sine';
-    this.musicOsc.frequency.setValueAtTime(55, c.currentTime);
+    this.musicOsc.frequency.setValueAtTime(notes[0], c.currentTime);
     this.musicOsc.connect(this.musicGain);
     this.musicOsc.start();
+
+    // Schedule note changes for arpeggio pattern
+    const scheduleArp = () => {
+      if (!this.musicOsc || !this.ctx) return;
+      const now = this.ctx.currentTime;
+      for (let i = 0; i < 32; i++) {
+        const idx = (noteIdx + i) % notes.length;
+        this.musicOsc.frequency.setValueAtTime(notes[idx], now + i * 0.25);
+      }
+      noteIdx = (noteIdx + 32) % notes.length;
+      this._arpInterval = setTimeout(scheduleArp, 7500);
+    };
+    scheduleArp();
   }
+
+  _arpInterval: any = null;
 
   stopMusic() {
     if (this.musicOsc) { this.musicOsc.stop(); this.musicOsc = null; this.musicGain = null; }
+    if (this._arpInterval) { clearTimeout(this._arpInterval); this._arpInterval = null; }
   }
 }
 
@@ -558,6 +580,42 @@ async function main() {
   let levelZone = 0;
   let toastTimer = 0;
 
+  // Wind system
+  let windX = 0;
+  let windZ = 0;
+  let windStrength = 0;
+  let windChangeTimer = 0;
+
+  function randomizeWind() {
+    const angle = Math.random() * Math.PI * 2;
+    windStrength = 0.5 + Math.random() * 3.5; // 0.5–4 m/s
+    windX = Math.cos(angle) * windStrength;
+    windZ = Math.sin(angle) * windStrength;
+    windChangeTimer = 8 + Math.random() * 12; // changes every 8-20s
+  }
+  randomizeWind();
+
+  // Slow-motion system
+  let slowMoTimer = 0;
+  let slowMoFactor = 1;
+
+  function triggerSlowMo(duration: number = 0.5, factor: number = 0.25) {
+    slowMoTimer = duration;
+    slowMoFactor = factor;
+  }
+
+  // Muzzle flash
+  let muzzleFlashTimer = 0;
+  const muzzleFlashMesh = new Mesh(
+    new SphereGeometry(0.15, 8, 8),
+    new MeshBasicMaterial({ color: new Color('#ffaa00'), transparent: true, opacity: 0, blending: AdditiveBlending })
+  );
+
+  // Survival mode state
+  let survivalWave = 0;
+  let survivalTotalScore = 0;
+  let survivalBestWave = 0;
+
   // Persistent stats (localStorage)
   interface SaveData {
     levelStars: number[]; highScore: number; totalShots: number;
@@ -567,6 +625,7 @@ async function main() {
     xp: number; level: number; prestige: number;
     cannonSkin: number; unlockedSkins: number[];
     totalScore: number; perfectLevels: number;
+    survivalBestWave: number; survivalBestScore: number;
   }
 
   function defaultSave(): SaveData {
@@ -578,6 +637,7 @@ async function main() {
       xp: 0, level: 1, prestige: 0,
       cannonSkin: 0, unlockedSkins: [0],
       totalScore: 0, perfectLevels: 0,
+      survivalBestWave: 0, survivalBestScore: 0,
     };
   }
 
@@ -765,6 +825,10 @@ async function main() {
   muzzleRing.position.z = -1.2;
   cannonPivot.add(muzzleRing);
 
+  // Muzzle flash
+  muzzleFlashMesh.position.z = -1.3;
+  cannonPivot.add(muzzleFlashMesh);
+
   cannonGroup.position.set(0, 0.5, 0);
   world.scene.add(cannonGroup);
 
@@ -801,6 +865,9 @@ async function main() {
     let vx = dir.x * spd, vy = dir.y * spd, vz = dir.z * spd;
     const dt = 0.05;
     for (let i = 0; i < trajectoryDots.length; i++) {
+      // Wind affects preview too
+      vx += windX * dt * 0.8;
+      vz += windZ * dt * 0.8;
       px += vx * dt; py += vy * dt; pz += vz * dt;
       vy -= 9.8 * dt;
       trajectoryDots[i].position.set(px, py, pz);
@@ -871,6 +938,7 @@ async function main() {
     if (combo > 2) {
       audio.play('combo');
       showToast(`${combo}x COMBO!`);
+      triggerSlowMo(0.4, 0.3); // Slow-mo on combos
     }
 
     // Combo-based multiplier bonuses
@@ -960,6 +1028,11 @@ async function main() {
     combo = 0;
     audio.play('fire');
     particles.emit(muzzlePos, 10, ammo.color, 3, 0.5);
+    // Muzzle flash
+    muzzleFlashTimer = 0.15;
+    (muzzleFlashMesh.material as MeshBasicMaterial).opacity = 0.9;
+    muzzleFlashMesh.scale.setScalar(1 + chargePower);
+    triggerShake(0.1 + chargePower * 0.15);
     state = 'firing';
   }
 
@@ -991,6 +1064,9 @@ async function main() {
       if (!p.active) continue;
 
       p.vy -= 9.8 * dt;
+      // Wind affects trajectory
+      p.vx += windX * dt * 0.8;
+      p.vz += windZ * dt * 0.8;
       p.mesh.position.x += p.vx * dt;
       p.mesh.position.y += p.vy * dt;
       p.mesh.position.z += p.vz * dt;
@@ -1186,6 +1262,11 @@ async function main() {
   createHUDPanel('power', '/ui/power.json', 0.15, 0.08, [-0.2, -0.12, -0.5]);
   createHUDPanel('toast', '/ui/toast.json', 0.35, 0.06, [0, 0.2, -0.5]);
   createHUDPanel('countdown', '/ui/countdown.json', 0.2, 0.12, [0, 0, -0.5]);
+  createHUDPanel('wind', '/ui/wind.json', 0.12, 0.08, [-0.2, -0.02, -0.5]);
+  createHUDPanel('survival', '/ui/survival.json', 0.25, 0.15, [0.25, -0.1, -0.5]);
+
+  // World-space panels for survival
+  createWorldPanel('waveclear', '/ui/waveclear.json', 0.8, 0.9, [0, 1.5, -2.5]);
 
   // ─── Panel Helpers ───────────────────────────────────────────
 
@@ -1236,9 +1317,13 @@ async function main() {
       case 'levelselect': showPanels('levelselect'); updateLevelSelect(); break;
       case 'ammo': showPanels('ammo'); updateAmmoPanel(); break;
       case 'countdown': showPanels('countdown'); countdownTimer = 3; break;
-      case 'aiming': showPanels('hud', 'power'); cannonGroup.visible = true; updateHUD(); break;
+      case 'aiming':
+        if (mode === 'survival') showPanels('survival', 'power', 'wind');
+        else showPanels('hud', 'power', 'wind');
+        cannonGroup.visible = true; updateHUD(); break;
       case 'levelcomplete': showPanels('levelcomplete'); updateLevelComplete(); break;
       case 'gameover': showPanels('gameover'); updateGameOver(); break;
+      case 'waveclear': showPanels('waveclear'); updateWaveClear(); break;
       case 'achievements': showPanels('achievements'); updateAchievements(); break;
       case 'settings': showPanels('settings'); updateSettings(); break;
       case 'help': showPanels('help'); break;
@@ -1312,6 +1397,10 @@ async function main() {
     const allDestroyed = blocks.every(b => b.destroyed);
     if (allDestroyed) {
       // Level complete!
+      if (mode === 'survival') {
+        checkSurvivalWaveEnd();
+        return;
+      }
       const def = LEVELS[currentLevel] || { shots: shotsLeft + shotsFired };
       const shotsUsed = shotsFired;
       const maxShots = def.shots;
@@ -1338,24 +1427,175 @@ async function main() {
 
       audio.play('complete');
       audio.stopMusic();
+      // Victory fireworks
+      const fireworkColors = ['#ff4400', '#ffcc00', '#00ffaa', '#ff00ff', '#4488ff', '#ff6600'];
+      for (let fw = 0; fw < 8; fw++) {
+        setTimeout(() => {
+          const fwPos = new Vector3((Math.random() - 0.5) * 6, 2 + Math.random() * 4, -8 + (Math.random() - 0.5) * 4);
+          const col = fireworkColors[Math.floor(Math.random() * fireworkColors.length)];
+          particles.emit(fwPos, 20, col, 4, 1.5);
+        }, fw * 200);
+      }
       goToState('levelcomplete');
     } else if (shotsLeft <= 0 && mode !== 'freeplay') {
       save.totalShots += shotsFired;
       save.totalBlocks += blocksDestroyed;
       persist();
       audio.stopMusic();
+      if (mode === 'survival') {
+        // Survival game over
+        if (survivalTotalScore > save.survivalBestScore) save.survivalBestScore = survivalTotalScore;
+        if (survivalWave > save.survivalBestWave) save.survivalBestWave = survivalWave;
+        persist();
+      }
       goToState('gameover');
     } else {
       state = 'aiming';
-      showPanels('hud', 'power');
+      if (mode === 'survival') showPanels('survival', 'power', 'wind');
+      else showPanels('hud', 'power', 'wind');
     }
+  }
+
+  // ─── Survival Mode ──────────────────────────────────────────
+
+  function startSurvivalMode() {
+    survivalWave = 1;
+    survivalTotalScore = 0;
+    shotsLeft = 10;
+    shotsFired = 0;
+    score = 0;
+    combo = 0;
+    maxCombo = 0;
+    blocksDestroyed = 0;
+    currentThemeIdx = 0;
+    cannonYaw = 0;
+    cannonPitch = 0.3;
+    chargePower = 0;
+    charging = false;
+    cleanupProjectiles();
+    spawnSurvivalWave(1);
+    goToState('countdown');
+    audio.startMusic();
+    save.gamesPlayed++;
+    persist();
+  }
+
+  function spawnSurvivalWave(wave: number) {
+    clearBlocks();
+    const blockCount = 4 + wave * 2 + Math.floor(wave / 3);
+    const cols = Math.min(6, 3 + Math.floor(wave / 2));
+    const types: BlockDef['type'][] = ['wood', 'stone'];
+    if (wave >= 2) types.push('metal');
+    if (wave >= 3) types.push('crystal', 'tnt');
+    if (wave >= 5) types.push('ice');
+    if (wave >= 7) types.push('rubber');
+    if (wave >= 10) types.push('plasma');
+
+    const blockDefs: BlockDef[] = [];
+    for (let i = 0; i < blockCount; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const t = types[Math.floor(Math.random() * types.length)];
+      blockDefs.push({
+        type: t,
+        x: -(cols - 1) * 0.25 + col * 0.5,
+        y: 0.25 + row * 0.5,
+        z: -8 - Math.floor(wave / 4),
+      });
+    }
+
+    // Boss block every 5 waves
+    if (wave % 5 === 0) {
+      blockDefs.push({ type: 'plasma', x: 0, y: 0.25 + Math.ceil(blockCount / cols) * 0.5, z: -9 });
+      blockDefs.push({ type: 'plasma', x: -0.5, y: 0.25 + Math.ceil(blockCount / cols) * 0.5, z: -9 });
+      blockDefs.push({ type: 'plasma', x: 0.5, y: 0.25 + Math.ceil(blockCount / cols) * 0.5, z: -9 });
+    }
+
+    totalBlocks = blockDefs.length;
+    currentThemeIdx = wave % THEMES.length;
+
+    for (const bd of blockDefs) {
+      const props = BLOCK_PROPS[bd.type];
+      const w = 0.45, h = 0.45, d = 0.45;
+      const geo = new BoxGeometry(w, h, d);
+      const mat = new MeshStandardMaterial({
+        color: new Color(props.color), emissive: new Color(props.emissive),
+        emissiveIntensity: bd.type === 'crystal' ? 0.5 : bd.type === 'tnt' ? 0.4 : 0.15,
+        metalness: bd.type === 'metal' ? 0.7 : 0.3, roughness: bd.type === 'metal' ? 0.2 : 0.5,
+      });
+      const mesh = new Mesh(geo, mat);
+      mesh.position.set(bd.x, bd.y, bd.z);
+      world.scene.add(mesh);
+      const edges = new LineSegments(new EdgesGeometry(geo), new LineBasicMaterial({ color: new Color(props.edge), transparent: true, opacity: 0.6 }));
+      edges.position.copy(mesh.position);
+      world.scene.add(edges);
+      blocks.push({ mesh, edges, type: bd.type, hp: props.hp, maxHp: props.hp, points: props.points, x: bd.x, y: bd.y, z: bd.z, w, h, d, destroyed: false, falling: false, vy: 0 });
+    }
+  }
+
+  function checkSurvivalWaveEnd() {
+    const allDestroyed = blocks.every(b => b.destroyed);
+    if (allDestroyed) {
+      survivalTotalScore += score;
+      // Bonus shots for clearing wave
+      const bonus = 3 + Math.floor(survivalWave / 3);
+      goToState('waveclear');
+      return true;
+    }
+    return false;
+  }
+
+  function updateSurvivalHUD() {
+    const doc = getDoc('survival');
+    setText(doc, 'surv-wave', `${survivalWave}`);
+    setText(doc, 'surv-score', `${Math.floor(score)}`);
+    setText(doc, 'surv-shots', `${shotsLeft}`);
+    const remaining = blocks.filter(b => !b.destroyed).length;
+    setText(doc, 'surv-blocks', `${remaining}`);
+  }
+
+  function updateWaveClear() {
+    const doc = getDoc('waveclear');
+    const bonus = 3 + Math.floor(survivalWave / 3);
+    setText(doc, 'wc-title', survivalWave % 5 === 0 ? 'BOSS DEFEATED!' : 'WAVE CLEAR!');
+    setText(doc, 'wc-wave', `Wave ${survivalWave} Complete`);
+    setText(doc, 'wc-score', `Score: ${Math.floor(survivalTotalScore + score)}`);
+    setText(doc, 'wc-bonus', `Bonus Shots: +${bonus}`);
+    setBtn(doc, 'btn-next-wave', () => {
+      audio.play('select');
+      const bonusShots = 3 + Math.floor(survivalWave / 3);
+      survivalTotalScore += score;
+      survivalWave++;
+      shotsLeft += bonusShots;
+      score = 0;
+      combo = 0;
+      maxCombo = 0;
+      blocksDestroyed = 0;
+      shotsFired = 0;
+      cannonYaw = 0;
+      cannonPitch = 0.3;
+      chargePower = 0;
+      charging = false;
+      cleanupProjectiles();
+      randomizeWind();
+      spawnSurvivalWave(survivalWave);
+      goToState('countdown');
+    });
+    setBtn(doc, 'btn-surv-menu', () => {
+      audio.play('select');
+      audio.stopMusic();
+      if (survivalTotalScore + score > save.survivalBestScore) save.survivalBestScore = survivalTotalScore + score;
+      if (survivalWave > save.survivalBestWave) save.survivalBestWave = survivalWave;
+      persist();
+      goToState('title');
+    });
   }
 
   // ─── UI Update Functions ─────────────────────────────────────
 
   function updateHUD() {
     const doc = getDoc('hud');
-    const modeNames: Record<string, string> = { campaign: 'CAMPAIGN', arcade: 'ARCADE', freeplay: 'FREE PLAY', timeattack: 'TIME ATTACK', daily: 'DAILY' };
+    const modeNames: Record<string, string> = { campaign: 'CAMPAIGN', arcade: 'ARCADE', freeplay: 'FREE PLAY', timeattack: 'TIME ATTACK', daily: 'DAILY', survival: 'SURVIVAL' };
     setText(doc, 'hud-mode', modeNames[mode] || 'CAMPAIGN');
     setText(doc, 'hud-level', `${currentLevel + 1}`);
     setText(doc, 'hud-score', `${Math.floor(score)}`);
@@ -1367,6 +1607,21 @@ async function main() {
     const pdoc = getDoc('power');
     setText(pdoc, 'power-value', `${Math.floor(chargePower * 100)}%`);
     setText(pdoc, 'ammo-type', AMMO_TYPES[currentAmmo].name);
+
+    // Wind indicator
+    updateWindDisplay();
+    // Survival HUD
+    if (mode === 'survival') updateSurvivalHUD();
+  }
+
+  function updateWindDisplay() {
+    const wdoc = getDoc('wind');
+    if (!wdoc) return;
+    const arrows = ['→', '↗', '↑', '↖', '←', '↙', '↓', '↘'];
+    const angle = Math.atan2(-windZ, windX);
+    const idx = Math.round(((angle + Math.PI) / (Math.PI * 2)) * 8) % 8;
+    setText(wdoc, 'wind-dir', arrows[idx]);
+    setText(wdoc, 'wind-speed', `${windStrength.toFixed(1)} m/s`);
   }
 
   function updateLevelSelect() {
@@ -1474,6 +1729,7 @@ async function main() {
     setText(doc, 'stat-level', `LV ${save.level}${save.prestige > 0 ? ` P${save.prestige}` : ''}`);
     setText(doc, 'stat-xp', `${save.xp}/${XP_PER_LEVEL * save.level}`);
     setText(doc, 'stat-score', `${save.totalScore}`);
+    // Survival stats shown in existing fields if available
     setBtn(doc, 'btn-back', () => { audio.play('select'); goToState('title'); });
   }
 
@@ -1544,6 +1800,42 @@ async function main() {
     { id: 'full_stars_z2', name: 'PERFECT FORGE', desc: '3 stars on all Zone 2', icon: '✨', check: () => save.levelStars.slice(6, 12).every(s => s === 3) },
     { id: 'full_stars_z3', name: 'PERFECT CIRCUIT', desc: '3 stars on all Zone 3', icon: '✨', check: () => save.levelStars.slice(12, 18).every(s => s === 3) },
     { id: 'boss_slayer', name: 'BOSS SLAYER', desc: 'Beat all 3 boss levels', icon: '🗡️', check: () => (save.levelStars[35] || 0) > 0 && (save.levelStars[41] || 0) > 0 && (save.levelStars[47] || 0) > 0 },
+    // Survival mode achievements (20 more = 82 total)
+    { id: 'survival_start', name: 'SURVIVOR', desc: 'Play Survival mode', icon: '💀', check: () => save.survivalBestWave >= 1 },
+    { id: 'survival_w3', name: 'WAVE RIDER', desc: 'Reach wave 3 in Survival', icon: '🌊', check: () => save.survivalBestWave >= 3 },
+    { id: 'survival_w5', name: 'IRON WILL', desc: 'Reach wave 5 in Survival', icon: '🛡️', check: () => save.survivalBestWave >= 5 },
+    { id: 'survival_w10', name: 'ENDURANCE', desc: 'Reach wave 10 in Survival', icon: '⚔️', check: () => save.survivalBestWave >= 10 },
+    { id: 'survival_w15', name: 'UNSTOPPABLE FORCE', desc: 'Reach wave 15 in Survival', icon: '💪', check: () => save.survivalBestWave >= 15 },
+    { id: 'survival_w20', name: 'LEGENDARY SURVIVOR', desc: 'Reach wave 20 in Survival', icon: '👑', check: () => save.survivalBestWave >= 20 },
+    { id: 'survival_1k', name: 'SURVIVOR SCORE', desc: 'Score 1,000 in Survival', icon: '📊', check: () => save.survivalBestScore >= 1000 },
+    { id: 'survival_5k', name: 'SURVIVOR ELITE', desc: 'Score 5,000 in Survival', icon: '📊', check: () => save.survivalBestScore >= 5000 },
+    { id: 'survival_10k', name: 'SURVIVAL LEGEND', desc: 'Score 10,000 in Survival', icon: '🏆', check: () => save.survivalBestScore >= 10000 },
+    { id: 'survival_boss', name: 'BOSS HUNTER', desc: 'Beat a Survival boss wave', icon: '🗡️', check: () => save.survivalBestWave >= 6 },
+    // Wind mastery achievements
+    { id: 'wind_master', name: 'WIND DANCER', desc: 'Get 3 stars with wind active', icon: '💨', check: () => save.levelStars.filter(s => s === 3).length >= 1 },
+    // Extended milestones (20 more = 102 total)
+    { id: 'blocks_10000', name: 'EXTINCTION EVENT', desc: 'Destroy 10,000 blocks', icon: '☄️', check: () => save.totalBlocks >= 10000 },
+    { id: 'shots_2500', name: 'BOMBARDIER', desc: 'Fire 2,500 shots', icon: '🎆', check: () => save.totalShots >= 2500 },
+    { id: 'shots_5000', name: 'SIEGE MASTER', desc: 'Fire 5,000 shots', icon: '🏰', check: () => save.totalShots >= 5000 },
+    { id: 'score_250k', name: 'QUARTER MILLION', desc: 'Earn 250,000 total score', icon: '💰', check: () => save.totalScore >= 250000 },
+    { id: 'score_500k', name: 'HALF MILLION', desc: 'Earn 500,000 total score', icon: '💰', check: () => save.totalScore >= 500000 },
+    { id: 'score_1m', name: 'MILLIONAIRE', desc: 'Earn 1,000,000 total score', icon: '👑', check: () => save.totalScore >= 1000000 },
+    { id: 'games_200', name: 'OBSESSED', desc: 'Play 200 games', icon: '🎮', check: () => save.gamesPlayed >= 200 },
+    { id: 'games_500', name: 'ADDICTED', desc: 'Play 500 games', icon: '🤩', check: () => save.gamesPlayed >= 500 },
+    { id: 'prestige_5', name: 'PRESTIGE V', desc: 'Prestige five times', icon: '🌀', check: () => save.prestige >= 5 },
+    { id: 'prestige_10', name: 'PRESTIGE X', desc: 'Prestige ten times', icon: '🔥', check: () => save.prestige >= 10 },
+    { id: 'combo_30', name: 'NUCLEAR CHAIN', desc: 'Get a 30x combo', icon: '☢️', check: () => save.bestCombo >= 30 },
+    { id: 'combo_50', name: 'INFINITE COMBO', desc: 'Get a 50x combo', icon: '♾️', check: () => save.bestCombo >= 50 },
+    { id: 'perfect_50', name: 'STAR MASTER', desc: '3 stars on 50 levels', icon: '⭐', check: () => save.levelStars.filter(s => s === 3).length >= 50 },
+    { id: 'highscore_100k', name: 'GOD MODE', desc: 'Score 100,000 in a level', icon: '✨', check: () => save.highScore >= 100000 },
+    { id: 'full_stars_z4', name: 'PERFECT NEXUS', desc: '3 stars on all Zone 4', icon: '✨', check: () => save.levelStars.slice(18, 24).every(s => s === 3) },
+    { id: 'full_stars_z5', name: 'PERFECT VOID', desc: '3 stars on all Zone 5', icon: '✨', check: () => save.levelStars.slice(24, 30).every(s => s === 3) },
+    { id: 'full_stars_z6', name: 'PERFECT PLASMA', desc: '3 stars on all Zone 6', icon: '✨', check: () => save.levelStars.slice(30, 36).every(s => s === 3) },
+    { id: 'full_stars_z7', name: 'PERFECT LATTICE', desc: '3 stars on all Zone 7', icon: '✨', check: () => save.levelStars.slice(36, 42).every(s => s === 3) },
+    { id: 'full_stars_z8', name: 'PERFECT STORM', desc: '3 stars on all Zone 8', icon: '✨', check: () => save.levelStars.slice(42, 48).every(s => s === 3) },
+    { id: 'full_stars_z9', name: 'PERFECT OMEGA', desc: '3 stars on all Omega', icon: '💎', check: () => save.levelStars.slice(48, 54).every(s => s === 3) },
+    { id: 'all_ammo', name: 'FULL ARSENAL', desc: 'Unlock all 8 ammo types', icon: '🎯', check: () => save.unlockedAmmo.length >= 8 },
+    { id: 'all_skins', name: 'FASHIONISTA', desc: 'Unlock all cannon skins', icon: '🎨', check: () => save.unlockedSkins.length >= 5 },
   ];
 
   function checkAchievements() {
@@ -1596,6 +1888,7 @@ async function main() {
     setBtn(doc, 'btn-freeplay', () => { audio.play('select'); mode = 'freeplay'; startLevel(0); });
     setBtn(doc, 'btn-timeattack', () => { audio.play('select'); mode = 'timeattack'; timeAttackTimer = 60; startLevel(0); });
     setBtn(doc, 'btn-daily', () => { audio.play('select'); mode = 'daily'; startLevel(new Date().getDate() % LEVELS.length); });
+    setBtn(doc, 'btn-survival', () => { audio.play('select'); mode = 'survival'; startSurvivalMode(); });
     setBtn(doc, 'btn-back', () => { audio.play('select'); goToState('title'); });
     return true;
   }
@@ -1628,7 +1921,14 @@ async function main() {
     gameUpdate(delta);
   };
 
-  function gameUpdate(dt: number) {
+  function gameUpdate(rawDt: number) {
+    // Slow-motion effect
+    if (slowMoTimer > 0) {
+      slowMoTimer -= rawDt;
+      if (slowMoTimer <= 0) slowMoFactor = 1;
+    }
+    const dt = rawDt * slowMoFactor;
+
     // Wire panels once docs are ready
     if (!titleWired) titleWired = wireTitle();
     if (!modeWired) modeWired = wireModeSelect();
@@ -1637,6 +1937,20 @@ async function main() {
 
     particles.update(dt);
     updateShake(dt);
+
+    // Muzzle flash decay
+    if (muzzleFlashTimer > 0) {
+      muzzleFlashTimer -= rawDt;
+      const flashOpacity = Math.max(0, muzzleFlashTimer / 0.15) * 0.9;
+      (muzzleFlashMesh.material as MeshBasicMaterial).opacity = flashOpacity;
+      if (muzzleFlashTimer <= 0) {
+        (muzzleFlashMesh.material as MeshBasicMaterial).opacity = 0;
+      }
+    }
+
+    // Wind system update
+    windChangeTimer -= rawDt;
+    if (windChangeTimer <= 0) randomizeWind();
 
     // Multiplier timer
     if (multiplierTimer > 0) {

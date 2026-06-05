@@ -1,0 +1,166 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "POWER"
+        ],
+        "properties": {
+          "class": "power-label"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "0%"
+        ],
+        "properties": {
+          "id": "power-value",
+          "class": "power-value"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "CANNONBALL"
+        ],
+        "properties": {
+          "id": "ammo-type",
+          "class": "ammo-label"
+        },
+        "dataUid": "uid-4"
+      }
+    ],
+    "properties": {
+      "class": "power-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "power-panel": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center",
+        "paddingTop": "0.4",
+        "paddingBottom": "0.4",
+        "paddingLeft": "1",
+        "paddingRight": "1",
+        "backgroundColor": "rgba(10, 0, 0, 0.85)",
+        "borderColor": "#ff4400",
+        "borderWidth": "0.05",
+        "borderRadius": 0.4
+      }
+    },
+    "power-label": {
+      "content": {
+        "fontSize": "0.9",
+        "color": "#885533"
+      }
+    },
+    "power-value": {
+      "content": {
+        "fontSize": "1.5",
+        "color": "#ff6600",
+        "fontWeight": "bold"
+      }
+    },
+    "ammo-label": {
+      "content": {
+        "fontSize": "0.8",
+        "color": "#aa5500",
+        "marginTop": "0.2"
+      }
+    }
+  },
+  "ranges": {
+    "power-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 14
+      }
+    },
+    "power-label": {
+      "start": {
+        "line": 14,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 14
+      }
+    },
+    "power-value": {
+      "start": {
+        "line": 18,
+        "column": 2
+      },
+      "end": {
+        "line": 18,
+        "column": 14
+      }
+    },
+    "ammo-label": {
+      "start": {
+        "line": 23,
+        "column": 2
+      },
+      "end": {
+        "line": 23,
+        "column": 13
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 29,
+        "column": 0
+      },
+      "end": {
+        "line": 33,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 30,
+        "column": 2
+      },
+      "end": {
+        "line": 30,
+        "column": 40
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 31,
+        "column": 2
+      },
+      "end": {
+        "line": 31,
+        "column": 54
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 32,
+        "column": 2
+      },
+      "end": {
+        "line": 32,
+        "column": 59
+      }
+    }
+  }
+}

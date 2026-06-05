@@ -1,0 +1,125 @@
+{
+  "element": {
+    "type": "container",
+    "sourceTag": "div",
+    "children": [
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [
+          "!"
+        ],
+        "properties": {
+          "id": "toast-icon",
+          "class": "toast-icon"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "span",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "id": "toast-text",
+          "class": "toast-text"
+        },
+        "dataUid": "uid-3"
+      }
+    ],
+    "properties": {
+      "class": "toast-panel"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {
+    "toast-panel": {
+      "content": {
+        "display": "flex",
+        "flexDirection": "row",
+        "paddingTop": "0.4",
+        "paddingBottom": "0.4",
+        "paddingLeft": "1",
+        "paddingRight": "1",
+        "backgroundColor": "rgba(10, 0, 0, 0.85)",
+        "borderColor": "#ffcc00",
+        "borderWidth": "0.05",
+        "borderRadius": 0.4
+      }
+    },
+    "toast-icon": {
+      "content": {
+        "fontSize": "1.2",
+        "color": "#ffcc00"
+      }
+    },
+    "toast-text": {
+      "content": {
+        "fontSize": "1",
+        "color": "#ff6600",
+        "marginLeft": "0.4"
+      }
+    }
+  },
+  "ranges": {
+    "toast-panel": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 14
+      }
+    },
+    "toast-icon": {
+      "start": {
+        "line": 13,
+        "column": 2
+      },
+      "end": {
+        "line": 13,
+        "column": 13
+      }
+    },
+    "toast-text": {
+      "start": {
+        "line": 17,
+        "column": 2
+      },
+      "end": {
+        "line": 17,
+        "column": 13
+      }
+    },
+    "uid-1": {
+      "start": {
+        "line": 23,
+        "column": 0
+      },
+      "end": {
+        "line": 26,
+        "column": 6
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 24,
+        "column": 2
+      },
+      "end": {
+        "line": 24,
+        "column": 51
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 25,
+        "column": 2
+      },
+      "end": {
+        "line": 25,
+        "column": 50
+      }
+    }
+  }
+}
